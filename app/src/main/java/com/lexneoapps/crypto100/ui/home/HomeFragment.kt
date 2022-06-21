@@ -5,15 +5,20 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AbsListView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.lexneoapps.crypto100.R
 import com.lexneoapps.crypto100.databinding.FragmentHomeBinding
+import com.lexneoapps.crypto100.other.NETWORK_PAGE_SIZE
 import com.lexneoapps.crypto100.ui.adapters.CoinAdapter
 import dagger.hilt.android.AndroidEntryPoint
 
 const val TAG = "HomeFragment"
+
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home) {
     private var _binding: FragmentHomeBinding? = null
@@ -34,30 +39,87 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setUpAdapter()
+        setUpRv()
         setUpObservers()
         setUpListeners()
 
     }
 
     private fun setUpObservers() {
-        viewModel.coins.observe(viewLifecycleOwner) {
-            Log.d(TAG, "setUpObservers: $it")
-            coinAdapter.submitData(viewLifecycleOwner.lifecycle, it)
+        viewModel.isLoading.observe(viewLifecycleOwner) {
+            Log.i(TAG, "isLoading $isLoading")
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
+        viewModel.data.observe(viewLifecycleOwner) {
+            val theList = it?.map { data ->
+                data.name
+            }
+            Log.d(TAG, "setUpObservers: $theList")
+            coinAdapter.submitList(it)
+        }
+        viewModel.homeStatus.observe(viewLifecycleOwner) {
+            when (it) {
+                HomeStatus.REFRESHED -> makeToast("List has been refreshed!")
+                HomeStatus.END -> makeToast("You have reached the end of the list")
+                HomeStatus.ERROR -> makeToast("${viewModel.errorMessage.value}")
+            }
+        }
+
     }
 
-    private fun setUpListeners(){
+    private fun setUpListeners() {
         binding.refresh.setOnRefreshListener {
-            coinAdapter.refresh()
+            viewModel.restartData()
             binding.refresh.isRefreshing = false
         }
     }
 
-    private fun setUpAdapter() {
+    var isLoading = false
+    var isLastPage = false
+    var isScrolling = false
+
+    private val scrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+            val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+            val visibleItemCount = layoutManager.childCount
+            val totalItemCount = layoutManager.itemCount
+
+            val isNotLoadingAndNotLastPage = !isLoading && !isLastPage
+            val isAtLastItem = firstVisibleItemPosition + visibleItemCount >= totalItemCount
+            val isNotAtBeginning = firstVisibleItemPosition >= 0
+            val isTotalMoreThanVisible = totalItemCount >= NETWORK_PAGE_SIZE
+            val shouldPaginate = isNotLoadingAndNotLastPage && isAtLastItem && isNotAtBeginning &&
+                    isTotalMoreThanVisible && isScrolling
+            if (shouldPaginate) {
+                viewModel.getData()
+                isScrolling = false
+            }
+        }
+
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
+            if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
+                isScrolling = true
+            }
+        }
+    }
+
+    private fun setUpRv() {
         coinAdapter = CoinAdapter()
-        binding.recyclerView.adapter = coinAdapter
-        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.apply {
+            adapter = coinAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            addOnScrollListener(this@HomeFragment.scrollListener)
+        }
+
+
+    }
+
+    private fun makeToast(msg: String) {
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
     }
 
 

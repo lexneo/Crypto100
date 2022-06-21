@@ -2,15 +2,15 @@ package com.lexneoapps.crypto100.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.lexneoapps.crypto100.R
 import com.lexneoapps.crypto100.data.remote.model.Data
 import com.lexneoapps.crypto100.databinding.ItemFragmentHomeBinding
 
 class CoinAdapter() :
-    PagingDataAdapter<Data, CoinAdapter.MyViewHolder>(CoinDiffCallback()) {
+   ListAdapter<Data, CoinAdapter.MyViewHolder>(CoinDiffCallback()) {
 
     class MyViewHolder(private val binding: ItemFragmentHomeBinding) :
         RecyclerView.ViewHolder(binding.root) {
