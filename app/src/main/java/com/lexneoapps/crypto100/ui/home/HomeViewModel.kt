@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lexneoapps.crypto100.data.remote.model.Data
+import com.lexneoapps.crypto100.other.NETWORK_PAGE_SIZE
 import com.lexneoapps.crypto100.repository.CoinRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -35,6 +36,36 @@ class HomeViewModel @Inject constructor(
         get() = _homeStatus
 
     private var currentPage = 1
+
+
+
+    //pagination fields
+    var isLoadingRv = false
+    var isLastPageRv = false
+    var isScrollingRv = false
+
+    var firstVisibleItemPosition = 0
+    var visibleItemCount = 0
+    var totalItemCount = 0
+
+    fun checkForPagination(){
+        val isNotLoadingAndNotLastPage = !isLoadingRv && !isLastPageRv
+        val isAtLastItem = firstVisibleItemPosition + visibleItemCount >= totalItemCount
+        val isNotAtBeginning = firstVisibleItemPosition >= 0
+        val isTotalMoreThanVisible = totalItemCount >= NETWORK_PAGE_SIZE
+        val shouldPaginate = isNotLoadingAndNotLastPage && isAtLastItem && isNotAtBeginning &&
+                isTotalMoreThanVisible && isScrollingRv
+
+        if (shouldPaginate) {
+            getData()
+            isScrollingRv = false
+        }
+    }
+
+
+
+
+
 
     init {
         getData()

@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lexneoapps.crypto100.R
 import com.lexneoapps.crypto100.databinding.FragmentHomeBinding
-import com.lexneoapps.crypto100.other.NETWORK_PAGE_SIZE
 import com.lexneoapps.crypto100.ui.adapters.CoinAdapter
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -47,8 +46,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun setUpObservers() {
         viewModel.isLoading.observe(viewLifecycleOwner) {
-            Log.i(TAG, "isLoading $isLoading")
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            binding.progressBar.visibility = if (viewModel.isLoadingRv) View.VISIBLE else View.GONE
         }
         viewModel.data.observe(viewLifecycleOwner) {
             val theList = it?.map { data ->
@@ -74,35 +72,24 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
-    var isLoading = false
-    var isLastPage = false
-    var isScrolling = false
 
     private val scrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
 
             val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-            val visibleItemCount = layoutManager.childCount
-            val totalItemCount = layoutManager.itemCount
+            viewModel.firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+            viewModel.visibleItemCount = layoutManager.childCount
+             viewModel.totalItemCount = layoutManager.itemCount
 
-            val isNotLoadingAndNotLastPage = !isLoading && !isLastPage
-            val isAtLastItem = firstVisibleItemPosition + visibleItemCount >= totalItemCount
-            val isNotAtBeginning = firstVisibleItemPosition >= 0
-            val isTotalMoreThanVisible = totalItemCount >= NETWORK_PAGE_SIZE
-            val shouldPaginate = isNotLoadingAndNotLastPage && isAtLastItem && isNotAtBeginning &&
-                    isTotalMoreThanVisible && isScrolling
-            if (shouldPaginate) {
-                viewModel.getData()
-                isScrolling = false
-            }
+            viewModel.checkForPagination()
+
         }
 
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
-                isScrolling = true
+                viewModel.isScrollingRv = true
             }
         }
     }
