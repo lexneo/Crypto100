@@ -18,8 +18,8 @@ class CoinPagingSource(
             val data = api.getCryptoData(position, params.loadSize).data
             LoadResult.Page(
                 data = data,
-                prevKey = if (position == STARTING_PAGE_INDEX) null else position - 1,
-                nextKey = if (position > 10) null else position + (params.loadSize / NETWORK_PAGE_SIZE)
+                prevKey = if (position == STARTING_PAGE_INDEX) null else position - NETWORK_PAGE_SIZE,
+                nextKey = if (position >= 89) null else position + NETWORK_PAGE_SIZE
             )
         } catch (exception: IOException) {
             LoadResult.Error(exception)
@@ -31,8 +31,8 @@ class CoinPagingSource(
 
     override fun getRefreshKey(state: PagingState<Int, Data>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
-                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
+            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(10)
+                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(10)
         }
     }
 

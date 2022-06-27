@@ -28,6 +28,13 @@ class CoinAdapter() :
                     R.string.cap_percent_text,
                     data.quote.USD.capPercentage.toString()
                 )
+                val rankInt = data.cmc_rank
+                if (rankInt<10){
+                    rankTextView.text = root.resources.getString(
+                        R.string.format_single_digit,
+                        rankInt.toString()
+                    )
+                }else rankTextView.text = data.cmc_rank.toString()
             }
         }
     }

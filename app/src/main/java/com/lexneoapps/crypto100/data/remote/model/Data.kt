@@ -1,7 +1,6 @@
 package com.lexneoapps.crypto100.data.remote.model
 
 import com.lexneoapps.crypto100.other.formatShortDate
-import java.text.DateFormat
 
 data class Data(
     val date_added: String,
@@ -9,6 +8,7 @@ data class Data(
     val name: String,
     val quote: Quote,
     val symbol: String,
+    val cmc_rank: Int
     ){
 
     val shortDate: String

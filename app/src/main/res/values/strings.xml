@@ -3,4 +3,5 @@
     <string name="price_text">Price %s$</string>
     <string name="cap_text">Cap %s B$</string>
     <string name="cap_percent_text">Cap %% %s%%</string>
+    <string name="format_single_digit">0%s</string>
 </resources>

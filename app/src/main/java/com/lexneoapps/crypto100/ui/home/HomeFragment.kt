@@ -36,23 +36,18 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         setUpAdapter()
         setUpObservers()
-        setUpListeners()
 
     }
 
     private fun setUpObservers() {
         viewModel.coins.observe(viewLifecycleOwner) {
-            Log.d(TAG, "setUpObservers: $it")
+            val currentList = coinAdapter.snapshot().items
+            Log.d(TAG, "setUpObservers: $currentList")
             coinAdapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
     }
 
-    private fun setUpListeners(){
-        binding.refresh.setOnRefreshListener {
-            coinAdapter.refresh()
-            binding.refresh.isRefreshing = false
-        }
-    }
+
 
     private fun setUpAdapter() {
         coinAdapter = CoinAdapter()
